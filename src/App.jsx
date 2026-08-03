@@ -1,8 +1,9 @@
 import { useState, useEffect } from "react";
-import { Plus, LogOut, RefreshCw, Paperclip } from "lucide-react";
+import { Plus, LogOut, RefreshCw, Paperclip, Settings } from "lucide-react";
 import { supabase } from "./lib/supabaseClient";
 import AuthScreen from "./components/AuthScreen";
 import TaskModal from "./components/TaskModal";
+import SettingsModal from "./components/SettingsModal";
 import {
   STATUSES, STATUS_META, TYPES, COUNTRIES, LANGUAGES,
   priorityMeta, countryFlag, formatDateTime,
@@ -28,7 +29,9 @@ function nextActionLabel(status) {
 export default function App() {
   const [session, setSession] = useState(null);
   const [role, setRole] = useState(null);
+  const [profile, setProfile] = useState(null);
   const [authLoading, setAuthLoading] = useState(true);
+  const [showSettings, setShowSettings] = useState(false);
 
   const [tasks, setTasks] = useState([]);
   const [celebsByGeo, setCelebsByGeo] = useState({});
@@ -46,10 +49,11 @@ export default function App() {
   }, []);
 
   useEffect(() => {
-    if (!session) { setRole(null); return; }
+    if (!session) { setRole(null); setProfile(null); return; }
     (async () => {
-      const { data } = await supabase.from("profiles").select("role").eq("id", session.user.id).single();
+      const { data } = await supabase.from("profiles").select("*").eq("id", session.user.id).single();
       setRole(data?.role || null);
+      setProfile(data || null);
     })();
   }, [session]);
 
@@ -115,7 +119,7 @@ export default function App() {
         title: draft.title, type: draft.type, priority: draft.priority, status: "Ожидание",
         format: draft.format, geo: draft.geo, language: draft.language, celebs: draft.celebs,
         description: draft.description, task_link: draft.taskLink, creative_link: draft.creativeLink,
-        created_at: now, posted_by: session.user.email,
+        created_at: now, posted_by: session.user.email, posted_by_id: session.user.id,
       });
     } else {
       const original = tasks.find((t) => t.id === modal.editingId);
@@ -177,6 +181,9 @@ export default function App() {
               <Plus size={15} /> Новая задача
             </button>
           )}
+          <button onClick={() => setShowSettings(true)} style={ghostBtnStyle} title="Уведомления Telegram">
+            <Settings size={15} />
+          </button>
           <button onClick={handleLogout} style={ghostBtnStyle} title="Выйти">
             <LogOut size={15} />
           </button>
@@ -264,6 +271,15 @@ export default function App() {
           onSave={saveModal}
           onDelete={deleteTask}
           celebsByGeo={celebsByGeo}
+        />
+      )}
+
+      {showSettings && (
+        <SettingsModal
+          userId={session.user.id}
+          currentChatId={profile?.telegram_chat_id}
+          onClose={() => setShowSettings(false)}
+          onSaved={(chatId) => setProfile((p) => ({ ...p, telegram_chat_id: chatId }))}
         />
       )}
     </div>
