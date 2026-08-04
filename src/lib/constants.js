@@ -48,12 +48,13 @@ export const STATUS_META = {
   "Готово": { color: TEXT_DESC, bg: "rgba(255,255,255,.04)", border: BORDER_STATUS_CHIP, marker: "#4e5a3c" },
 };
 
-export const TYPES = ["Видео", "Видео на ленд", "Статика", "Статика на ленд"];
+export const TYPES = ["Видео", "Видео на ленд", "Статика", "Статика на ленд", "Уникализация"];
 export const TYPE_TAGS = {
   "Видео": "VIDEO",
   "Видео на ленд": "VIDEO / LP",
   "Статика": "STATIC",
   "Статика на ленд": "STATIC / LP",
+  "Уникализация": "UNIQ",
 };
 export const FORMATS = ["4:5", "1:1", "16:9", "9:16"];
 
