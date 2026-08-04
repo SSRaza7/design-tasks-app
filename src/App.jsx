@@ -121,7 +121,7 @@ export default function App() {
         title: draft.title, type: draft.type, priority: draft.priority, status: "Ожидание",
         format: draft.format, geo: draft.geo, language: draft.language, celebs: draft.celebs,
         description: draft.description, task_link: draft.taskLink, creative_link: draft.creativeLink,
-        created_at: now, posted_by: session.user.email, posted_by_id: session.user.id,
+        created_at: now, posted_by: profile?.username || session.user.email, posted_by_id: session.user.id,
       });
     } else {
       const original = tasks.find((t) => t.id === modal.editingId);
@@ -138,7 +138,7 @@ export default function App() {
         role === "designer" &&
         !original?.assigned_designer_id
       ) {
-        update.assigned_designer = session.user.email;
+        update.assigned_designer = profile?.username || session.user.email;
         update.assigned_designer_id = session.user.id;
       }
       await supabase.from("tasks").update(update).eq("id", modal.editingId);
@@ -160,7 +160,7 @@ export default function App() {
     const next = STATUSES[idx + 1];
     const update = { status: next, status_updated_at: new Date().toISOString() };
     if (task.status === "Ожидание" && role === "designer" && !task.assigned_designer_id) {
-      update.assigned_designer = session.user.email;
+      update.assigned_designer = profile?.username || session.user.email;
       update.assigned_designer_id = session.user.id;
     }
     await supabase.from("tasks").update(update).eq("id", task.id);
@@ -318,8 +318,9 @@ export default function App() {
         <SettingsModal
           userId={session.user.id}
           currentChatId={profile?.telegram_chat_id}
+          currentUsername={profile?.username}
           onClose={() => setShowSettings(false)}
-          onSaved={(chatId) => setProfile((p) => ({ ...p, telegram_chat_id: chatId }))}
+          onSaved={({ chatId, username }) => setProfile((p) => ({ ...p, telegram_chat_id: chatId, username }))}
         />
       )}
     </div>
