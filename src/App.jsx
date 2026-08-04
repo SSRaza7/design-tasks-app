@@ -4,6 +4,7 @@ import { supabase } from "./lib/supabaseClient";
 import AuthScreen from "./components/AuthScreen";
 import TaskModal from "./components/TaskModal";
 import SettingsModal from "./components/SettingsModal";
+import Dashboard from "./components/Dashboard";
 import {
   STATUSES, STATUS_META, TYPES, COUNTRIES, LANGUAGES,
   priorityMeta, countryFlag, formatDateTime,
@@ -37,6 +38,7 @@ export default function App() {
   const [celebsByGeo, setCelebsByGeo] = useState({});
   const [modal, setModal] = useState(null);
   const [buyerFilter, setBuyerFilter] = useState("all");
+  const [view, setView] = useState("tasks");
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
@@ -198,18 +200,37 @@ export default function App() {
           <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: "12px", letterSpacing: "0.06em", color: LIME_DIM, marginBottom: "4px" }}>
             ДИЗАЙН-СТУДИЯ / {role === "designer" ? "ПОРТАЛ ДИЗАЙНЕРА" : isTeamLead ? "ПОСТАНОВКА ЗАДАЧ / ТИМЛИД" : "ПОСТАНОВКА ЗАДАЧ"}
           </div>
-          <h1 style={{ fontFamily: fontStack, fontWeight: 600, fontSize: "26px", margin: 0, color: TEXT }}>
-            {role === "designer" ? "Задачи в работе" : "Задачи"}
-          </h1>
+          <div style={{ display: "flex", alignItems: "baseline", gap: "22px" }}>
+            <button
+              onClick={() => setView("tasks")}
+              style={{
+                background: "none", border: "none", cursor: "pointer", padding: 0,
+                fontFamily: fontStack, fontWeight: 600, fontSize: "26px",
+                color: view === "tasks" ? TEXT : TEXT_MUTED,
+              }}
+            >
+              {role === "designer" ? "Задачи в работе" : "Задачи"}
+            </button>
+            <button
+              onClick={() => setView("dashboard")}
+              style={{
+                background: "none", border: "none", cursor: "pointer", padding: 0,
+                fontFamily: fontStack, fontWeight: 600, fontSize: "26px",
+                color: view === "dashboard" ? TEXT : TEXT_MUTED,
+              }}
+            >
+              Дашборд
+            </button>
+          </div>
         </div>
         <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
-          {showBuyerFilter && (
+          {view === "tasks" && showBuyerFilter && (
             <select value={buyerFilter} onChange={(e) => setBuyerFilter(e.target.value)} style={filterSelectStyle}>
               <option value="all">Все баеры</option>
               {buyerOptions.map((b) => <option key={b} value={b}>{b}</option>)}
             </select>
           )}
-          {role === "buyer" && (
+          {view === "tasks" && role === "buyer" && (
             <button onClick={openNew} style={primaryBtnStyle}>
               <Plus size={15} /> Новая задача
             </button>
@@ -223,13 +244,14 @@ export default function App() {
         </div>
       </div>
 
-      <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
-        {visibleTasks.length === 0 && (
-          <div style={{ color: TEXT_MUTED, fontSize: "13px", padding: "24px 0", textAlign: "center", border: `1px dashed ${BORDER}`, borderRadius: "10px" }}>
-            Пока нет задач
-          </div>
-        )}
-        {visibleTasks.map((task) => {
+      {view === "tasks" && (
+        <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+          {visibleTasks.length === 0 && (
+            <div style={{ color: TEXT_MUTED, fontSize: "13px", padding: "24px 0", textAlign: "center", border: `1px dashed ${BORDER}`, borderRadius: "10px" }}>
+              Пока нет задач
+            </div>
+          )}
+          {visibleTasks.map((task) => {
           const pm = priorityMeta(task.priority);
           const sm = STATUS_META[task.status] || STATUS_META["Ожидание"];
           return (
@@ -299,8 +321,13 @@ export default function App() {
               </div>
             </div>
           );
-        })}
-      </div>
+          })}
+        </div>
+      )}
+
+      {view === "dashboard" && (
+        <Dashboard tasks={tasks} role={role} isTeamLead={isTeamLead} />
+      )}
 
       {modal && (
         <TaskModal
