@@ -39,6 +39,11 @@ export default function App() {
   const [modal, setModal] = useState(null);
   const [buyerFilter, setBuyerFilter] = useState("all");
   const [view, setView] = useState("tasks");
+  const [page, setPage] = useState(1);
+
+  useEffect(() => {
+    setPage(1);
+  }, [buyerFilter, view]);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
@@ -187,6 +192,10 @@ export default function App() {
   const showBuyerFilter = role === "designer" || isTeamLead;
   const buyerOptions = Array.from(new Set(tasks.map((t) => t.posted_by).filter(Boolean)));
   const visibleTasks = buyerFilter === "all" ? tasks : tasks.filter((t) => t.posted_by === buyerFilter);
+  const pageSize = 10;
+  const totalPages = Math.max(1, Math.ceil(visibleTasks.length / pageSize));
+  const currentPage = Math.min(page, totalPages);
+  const pagedTasks = visibleTasks.slice((currentPage - 1) * pageSize, currentPage * pageSize);
 
   const filterSelectStyle = {
     padding: "8px 12px", borderRadius: "8px", border: `1px solid ${BORDER}`,
@@ -195,6 +204,32 @@ export default function App() {
 
   return (
     <div style={{ fontFamily: "'Inter', sans-serif", background: BG, minHeight: "100vh", padding: "28px", color: TEXT }}>
+      <style>{`
+        @keyframes razaNeonPulse {
+          0%, 100% {
+            text-shadow: 0 0 4px #C6FF3D, 0 0 12px #C6FF3D, 0 0 24px #C6FF3D, 0 0 48px #8FBF2B;
+            opacity: 1;
+          }
+          50% {
+            text-shadow: 0 0 2px #C6FF3D, 0 0 6px #C6FF3D, 0 0 14px #8FBF2B;
+            opacity: 0.72;
+          }
+        }
+        .raza-neon {
+          animation: razaNeonPulse 2.2s ease-in-out infinite;
+        }
+      `}</style>
+      <div style={{ textAlign: "center", marginBottom: "18px" }}>
+        <span
+          className="raza-neon"
+          style={{
+            fontFamily: fontStack, fontWeight: 700, fontSize: "20px",
+            letterSpacing: "0.2em", color: LIME,
+          }}
+        >
+          RAZA TEAM
+        </span>
+      </div>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", marginBottom: "22px", flexWrap: "wrap", gap: "12px" }}>
         <div>
           <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: "12px", letterSpacing: "0.06em", color: LIME_DIM, marginBottom: "4px" }}>
@@ -251,7 +286,7 @@ export default function App() {
               Пока нет задач
             </div>
           )}
-          {visibleTasks.map((task) => {
+          {pagedTasks.map((task) => {
           const pm = priorityMeta(task.priority);
           const sm = STATUS_META[task.status] || STATUS_META["Ожидание"];
           return (
@@ -322,6 +357,46 @@ export default function App() {
             </div>
           );
           })}
+        </div>
+      )}
+
+      {view === "tasks" && totalPages > 1 && (
+        <div style={{ display: "flex", justifyContent: "center", gap: "6px", marginTop: "18px" }}>
+          <button
+            onClick={() => setPage((p) => Math.max(1, p - 1))}
+            disabled={currentPage === 1}
+            style={{
+              padding: "7px 12px", borderRadius: "7px", border: `1px solid ${BORDER}`,
+              background: SURFACE, color: currentPage === 1 ? TEXT_MUTED : TEXT,
+              cursor: currentPage === 1 ? "default" : "pointer", fontSize: "13px",
+            }}
+          >
+            ←
+          </button>
+          {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => (
+            <button
+              key={p}
+              onClick={() => setPage(p)}
+              style={{
+                padding: "7px 12px", borderRadius: "7px", border: `1px solid ${p === currentPage ? LIME : BORDER}`,
+                background: p === currentPage ? LIME : SURFACE, color: p === currentPage ? BG : TEXT,
+                cursor: "pointer", fontSize: "13px", fontWeight: p === currentPage ? 600 : 400,
+              }}
+            >
+              {p}
+            </button>
+          ))}
+          <button
+            onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+            disabled={currentPage === totalPages}
+            style={{
+              padding: "7px 12px", borderRadius: "7px", border: `1px solid ${BORDER}`,
+              background: SURFACE, color: currentPage === totalPages ? TEXT_MUTED : TEXT,
+              cursor: currentPage === totalPages ? "default" : "pointer", fontSize: "13px",
+            }}
+          >
+            →
+          </button>
         </div>
       )}
 
