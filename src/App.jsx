@@ -325,14 +325,14 @@ async function handleRequestChanges(task, note) {
 
       {panelTask && (
         <TaskPanel
-          task={panelTask}
-          role={role}
-          onClose={() => setPanelTaskId(null)}
-          onTakeIntoWork={handleTakeIntoWork}
-          onAdvance={handleAdvance}
-          onDelete={handleDelete}
-          onSaveCreative={handleSaveCreative}
-        />
+  task={panelTask}
+  role={role}
+  onClose={() => setPanelTaskId(null)}
+  onTakeIntoWork={handleTakeIntoWork}
+  onAdvance={handleAdvance}
+  onDelete={handleDelete}
+  onSaveCreative={handleSaveCreative}
+/>
       )}
 
       {creating && (
