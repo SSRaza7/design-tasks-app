@@ -119,15 +119,24 @@ export default function App() {
   }
 
   const STATUS_ORDER = ["Ожидание", "В работе", "На ревью", "Готово"];
-  async function handleAdvance(task) {
-    const idx = STATUS_ORDER.indexOf(task.status);
-    if (idx === -1 || idx === STATUS_ORDER.length - 1) return;
-    await supabase.from("tasks").update({
-      status: STATUS_ORDER[idx + 1],
-      status_updated_at: new Date().toISOString(),
-    }).eq("id", task.id);
-    fetchTasks();
-  }
+async function handleAdvance(task) {
+  const idx = STATUS_ORDER.indexOf(task.status);
+  if (idx === -1 || idx === STATUS_ORDER.length - 1) return;
+  const nextStatus = STATUS_ORDER[idx + 1];
+  const update = { status: nextStatus, status_updated_at: new Date().toISOString() };
+  if (nextStatus === "На ревью") update.revision_note = null;
+  await supabase.from("tasks").update(update).eq("id", task.id);
+  fetchTasks();
+}
+
+async function handleRequestChanges(task, note) {
+  await supabase.from("tasks").update({
+    status: "В работе",
+    status_updated_at: new Date().toISOString(),
+    revision_note: note,
+  }).eq("id", task.id);
+  fetchTasks();
+}
 
   async function handleDelete(id) {
     await supabase.from("tasks").delete().eq("id", id);
