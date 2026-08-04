@@ -1,14 +1,76 @@
+// ============================================================
+// Design tokens — RAZA TEAM Task Board redesign
+// ============================================================
+
+export const BG = "#0a0b0a";
+export const BG_SIDEBAR = "#0c0e0b";
+export const SURFACE = "#0d0f0b";        // panel / modal
+export const SURFACE_1 = "#0e100c";      // status cards, kanban columns
+export const SURFACE_2 = "#101208";      // inputs, icon buttons (kept name for compat)
+export const SURFACE_ROW = "#0f110c";    // list row
+export const SURFACE_CARD = "#121509";   // kanban card
+export const SURFACE_CHIP = "#15180f";   // id chip, sidebar hover
+export const SURFACE_RAISED = "#1c2016"; // avatar
+export const SURFACE_TOGGLE = "#22271b"; // active view-toggle button
+export const HOVER_ROW = "#141710";
+export const HOVER_CARD = "#171b0e";
+
+export const BORDER = "#1b1e18";         // base / dividers
+export const BORDER_ROW = "#1d2118";
+export const BORDER_CHIP = "#22271b";
+export const BORDER_INPUT = "#23271d";
+export const BORDER_STATUS_CHIP = "#25291e";
+export const BORDER_STATUS_BTN = "#262c1c";
+export const BORDER_HOVER = "#2b3122";
+export const BORDER_INPUT_HOVER = "#333a29";
+export const BORDER_CARD_HOVER = "#39412c";
+export const BORDER_INPUT_FOCUS = "#3d472c";
+export const LINE_FILLER = "#16190f";
+
+export const TEXT = "#e8ebe3";
+export const TEXT_SECONDARY = "#c3cab7";
+export const TEXT_MUTED = "#a8b09a";
+export const TEXT_DESC = "#7c8470";
+export const TEXT_META = "#6b7361";
+export const TEXT_QUIET = "#5d6455";
+export const TEXT_QUIETEST = "#4d5346";
+
+export const LIME = "#c8f751";
+export const LIME_DIM = "#d6ff62"; // hover state (kept name for backward compat)
+export const LIME_HOVER = "#d6ff62";
+
 export const STATUSES = ["Ожидание", "В работе", "На ревью", "Готово"];
 
 export const STATUS_META = {
-  "Ожидание": { color: "#8B9080", bg: "#20231C" },
-  "В работе": { color: "#0E0F0C", bg: "#C6FF3D" },
-  "На ревью": { color: "#0E0F0C", bg: "#E8C93D" },
-  "Готово": { color: "#0E0F0C", bg: "#4FA391" },
+  "Ожидание": { color: "#8a9078", bg: "rgba(255,255,255,.04)", border: BORDER_STATUS_CHIP, marker: "#8a9078" },
+  "В работе": { color: LIME, bg: "rgba(200,247,81,.1)", border: "rgba(200,247,81,.28)", marker: LIME },
+  "На ревью": { color: "#6fb4f0", bg: "rgba(255,255,255,.04)", border: BORDER_STATUS_CHIP, marker: "#6fb4f0" },
+  "Готово": { color: TEXT_DESC, bg: "rgba(255,255,255,.04)", border: BORDER_STATUS_CHIP, marker: "#4e5a3c" },
 };
 
 export const TYPES = ["Видео", "Видео на ленд", "Статика", "Статика на ленд"];
+export const TYPE_TAGS = {
+  "Видео": "VIDEO",
+  "Видео на ленд": "VIDEO / LP",
+  "Статика": "STATIC",
+  "Статика на ленд": "STATIC / LP",
+};
 export const FORMATS = ["4:5", "1:1", "16:9", "9:16"];
+
+export const PRIORITIES = [
+  { label: "Низкий", tab: TEXT_META },
+  { label: "Средний", tab: "#e0a44a" },
+  { label: "Высокий", tab: "#f06f6f" },
+  { label: "Срочно", tab: "#ff5757" },
+];
+export const priorityMeta = (label) => PRIORITIES.find((p) => p.label === label) || PRIORITIES[1];
+
+export const BUYER_DOT_COLORS = ["#6fb4f0", "#e0a44a", "#b78ce0", "#7ee08a", "#f0708f", "#f0c96f", LIME];
+
+export const CHART_COLORS = [
+  LIME, "#6fb4f0", "#e0a44a", "#b78ce0", "#7ee08a",
+  "#f0708f", "#f0c96f", TEXT_META, "#5dd9c1", "#f2a65a",
+];
 
 export const COUNTRIES = [
   "Австралия","Австрия","Азербайджан","Албания","Алжир","Ангола","Андорра","Антигуа и Барбуда","Аргентина","Армения",
@@ -70,26 +132,9 @@ export const COUNTRY_CODES = {
 
 export const countryFlag = (name) => {
   const code = COUNTRY_CODES[name];
-  if (!code) return "";
+  if (!code) return "🌐";
   return code.toUpperCase().replace(/./g, (ch) => String.fromCodePoint(127397 + ch.charCodeAt(0)));
 };
-
-export const PRIORITIES = [
-  { label: "Низкий", tab: "#5B6152" },
-  { label: "Средний", tab: "#8FBF2B" },
-  { label: "Высокий", tab: "#E8C93D" },
-  { label: "Срочно", tab: "#E85D3D" },
-];
-export const priorityMeta = (label) => PRIORITIES.find((p) => p.label === label) || PRIORITIES[1];
-
-export const LIME = "#C6FF3D";
-export const LIME_DIM = "#8FBF2B";
-export const BG = "#0E0F0C";
-export const SURFACE = "#181A15";
-export const SURFACE_2 = "#20231C";
-export const BORDER = "#2E3226";
-export const TEXT = "#EDEFE7";
-export const TEXT_MUTED = "#8B9080";
 
 export const formatDateTime = (d) => {
   const pad = (n) => String(n).padStart(2, "0");
@@ -103,23 +148,29 @@ export const mediaType = (url) => {
   if (/\.(jpg|jpeg|png|gif|webp)$/.test(clean)) return "image";
   return null;
 };
-export const CHART_COLORS = [
-  "#C6FF3D", "#4FA391", "#E8C93D", "#E85D3D", "#7C9EFF",
-  "#C77DFF", "#FF8FA3", "#8FBF2B", "#5DD9C1", "#F2A65A",
-];
+
+export const FONT_UI = "'Manrope', Helvetica, Arial, sans-serif";
+export const FONT_MONO = "'JetBrains Mono', monospace";
+// legacy alias used by earlier screens (login/settings/dashboard)
+export const FONT_STACK = "'Manrope', Helvetica, Arial, sans-serif";
+
 export const inputStyle = {
-  width: "100%", boxSizing: "border-box", padding: "8px 10px", borderRadius: "7px",
-  border: `1px solid ${BORDER}`, background: SURFACE_2, fontSize: "13px", color: TEXT, outline: "none",
+  width: "100%", boxSizing: "border-box", padding: "10px 12px", borderRadius: "9px",
+  border: `1px solid ${BORDER_INPUT}`, background: SURFACE_2, fontSize: "13.5px",
+  color: TEXT, outline: "none", fontFamily: FONT_UI,
 };
 export const loginInputStyle = {
-  width: "100%", boxSizing: "border-box", padding: "10px 12px", borderRadius: "8px",
-  border: `1px solid ${BORDER}`, background: SURFACE, fontSize: "13px", color: TEXT, outline: "none",
+  width: "100%", boxSizing: "border-box", padding: "10px 12px", borderRadius: "9px",
+  border: `1px solid ${BORDER_INPUT}`, background: SURFACE_2, fontSize: "13.5px",
+  color: TEXT, outline: "none", fontFamily: FONT_UI,
 };
 export const primaryBtnStyle = {
-  display: "flex", alignItems: "center", gap: "6px", background: LIME, color: BG,
-  border: "none", borderRadius: "8px", padding: "9px 14px", fontSize: "13px", fontWeight: 600, cursor: "pointer",
+  display: "flex", alignItems: "center", gap: "7px", background: LIME, color: BG,
+  border: "none", borderRadius: "9px", padding: "0 15px", height: "34px",
+  fontSize: "13px", fontWeight: 700, cursor: "pointer", fontFamily: FONT_UI,
+  boxShadow: `0 0 0 1px ${LIME}, 0 6px 18px -8px rgba(200,247,81,.6)`, whiteSpace: "nowrap",
 };
 export const ghostBtnStyle = {
-  display: "flex", alignItems: "center", background: "transparent", color: TEXT_MUTED,
-  border: `1px solid ${BORDER}`, borderRadius: "8px", padding: "9px", cursor: "pointer",
+  display: "flex", alignItems: "center", justifyContent: "center", background: SURFACE_2, color: TEXT_QUIET,
+  border: `1px solid ${BORDER_INPUT}`, borderRadius: "9px", width: "34px", height: "34px", cursor: "pointer",
 };

@@ -85,6 +85,46 @@ supabase/
   schema.sql             — вся схема базы + права доступа + хранилище
 ```
 
+## 5. Telegram-уведомления (по желанию)
+
+Баерам приходит уведомление, когда дизайнер переводит задачу в статус
+«На ревью». Дизайнерам приходит уведомление о каждой новой задаче.
+
+### 5.1 Создать бота
+1. В Telegram напишите **@BotFather** → `/newbot` → задайте имя и username.
+2. Сохраните токен вида `123456789:AAH...`.
+
+### 5.2 Выполнить миграцию базы
+В Supabase → SQL Editor выполните `supabase/migration-telegram.sql`.
+
+### 5.3 Задеплоить Edge Function
+1. Supabase Dashboard → **Edge Functions** → **Deploy a new function**.
+2. Имя функции: `notify-telegram`.
+3. Вставьте содержимое `supabase/functions/notify-telegram/index.ts`.
+4. Deploy.
+5. В настройках функции (Secrets) добавьте:
+   - `TELEGRAM_BOT_TOKEN` = токен из шага 5.1
+   - `SUPABASE_URL` и `SUPABASE_SERVICE_ROLE_KEY` обычно доступны функциям
+     автоматически; если Supabase попросит — возьмите их в
+     Project Settings → API (Service role — секретный ключ, храните только
+     в Secrets функции, никогда не в клиентском коде).
+6. Отключите проверку JWT для этой функции (Function settings →
+   **Verify JWT** → выключить), иначе вебхук от базы не сможет её вызвать.
+
+### 5.4 Настроить Database Webhook
+1. Supabase Dashboard → **Database** → **Webhooks** → **Create a new hook**.
+2. Table: `tasks`. Events: **Insert** и **Update** (оба).
+3. Type: **Supabase Edge Functions** → выберите `notify-telegram`.
+4. Save.
+
+### 5.5 Каждый участник включает уведомления себе
+1. Найти вашего бота в Telegram → **Start**.
+2. Написать **@userinfobot** → он пришлёт числовой ID.
+3. В самом трекере — иконка шестерёнки в шапке → вставить этот ID → Сохранить.
+
+Готово — с этого момента баер и дизайнеры получают пуши в Telegram
+автоматически.
+
 ## Известные упрощения (можно доработать позже)
 
 - Права в базе сейчас разрешают любому авторизованному пользователю

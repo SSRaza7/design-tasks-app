@@ -3,7 +3,7 @@ import { Mail, Lock, Tag } from "lucide-react";
 import { supabase } from "../lib/supabaseClient";
 import { LIME, LIME_DIM, BG, SURFACE, BORDER, TEXT, TEXT_MUTED, loginInputStyle } from "../lib/constants";
 
-const fontStack = "'Space Grotesk', 'Inter', sans-serif";
+const fontStack = "'Manrope', Helvetica, Arial, sans-serif";
 
 export default function AuthScreen() {
   const [mode, setMode] = useState("signin"); // 'signin' | 'signup'
@@ -61,7 +61,7 @@ export default function AuthScreen() {
 
   return (
     <div style={{
-      fontFamily: "'Inter', sans-serif", background: BG, minHeight: "100vh",
+      fontFamily: fontStack, background: BG, minHeight: "100vh",
       display: "flex", alignItems: "center", justifyContent: "center", padding: "24px", color: TEXT,
     }}>
       <style>{`
@@ -69,9 +69,12 @@ export default function AuthScreen() {
         .auth-btn:hover { background: ${LIME_DIM} !important; }
       `}</style>
       <div style={{ width: "100%", maxWidth: "380px" }}>
-        <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "28px" }}>
-          <div style={{ width: "28px", height: "28px", borderRadius: "6px", background: LIME, display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 700, color: BG, fontSize: "15px" }}>D</div>
-          <span style={{ fontFamily: fontStack, fontWeight: 600, fontSize: "16px" }}>DesignFlow</span>
+        <div style={{ display: "flex", alignItems: "center", gap: "9px", marginBottom: "28px" }}>
+          <div style={{ width: "26px", height: "26px", borderRadius: "7px", background: LIME, display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 700, color: BG, fontSize: "13px", fontFamily: "'JetBrains Mono', monospace" }}>R</div>
+          <div>
+            <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: "12px", letterSpacing: ".16em", fontWeight: 700, color: TEXT }}>RAZA</div>
+            <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: "9px", letterSpacing: ".2em", color: TEXT_MUTED }}>TEAM OS</div>
+          </div>
         </div>
 
         <h1 style={{ fontFamily: fontStack, fontWeight: 600, fontSize: "22px", margin: "0 0 6px" }}>

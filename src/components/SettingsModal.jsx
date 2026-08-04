@@ -3,7 +3,7 @@ import { X, Send, Tag } from "lucide-react";
 import { supabase } from "../lib/supabaseClient";
 import { LIME, BG, SURFACE, SURFACE_2, BORDER, TEXT, TEXT_MUTED, inputStyle } from "../lib/constants";
 
-const fontStack = "'Space Grotesk', 'Inter', sans-serif";
+const fontStack = "'Manrope', Helvetica, Arial, sans-serif";
 
 export default function SettingsModal({ userId, currentChatId, currentUsername, onClose, onSaved }) {
   const [chatId, setChatId] = useState(currentChatId || "");

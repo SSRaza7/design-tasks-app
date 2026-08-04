@@ -2,7 +2,7 @@ import { useState, useMemo } from "react";
 import { DonutChart, ChartLegend } from "./DonutChart";
 import { SURFACE, SURFACE_2, BORDER, TEXT, TEXT_MUTED, inputStyle } from "../lib/constants";
 
-const fontStack = "'Space Grotesk', 'Inter', sans-serif";
+const fontStack = "'Manrope', Helvetica, Arial, sans-serif";
 
 function daysAgo(n) {
   const d = new Date();
