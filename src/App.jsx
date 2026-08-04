@@ -103,6 +103,7 @@ export default function App() {
         title: task.title, type: task.type, priority: task.priority, status: task.status,
         format: task.format || [], geo: task.geo, language: task.language, celebs: task.celebs || [],
         description: task.description || "", taskLink: task.task_link || "", creativeLink: task.creative_link || "",
+        assignedDesigner: task.assigned_designer || "",
       },
       editingId: task.id,
     });
@@ -124,12 +125,22 @@ export default function App() {
     } else {
       const original = tasks.find((t) => t.id === modal.editingId);
       const statusChanged = original && original.status !== draft.status;
-      await supabase.from("tasks").update({
+      const update = {
         title: draft.title, type: draft.type, priority: draft.priority, status: draft.status,
         format: draft.format, geo: draft.geo, language: draft.language, celebs: draft.celebs,
         description: draft.description, task_link: draft.taskLink, creative_link: draft.creativeLink,
         status_updated_at: statusChanged ? now : original?.status_updated_at,
-      }).eq("id", modal.editingId);
+      };
+      if (
+        statusChanged &&
+        draft.status === "В работе" &&
+        role === "designer" &&
+        !original?.assigned_designer_id
+      ) {
+        update.assigned_designer = session.user.email;
+        update.assigned_designer_id = session.user.id;
+      }
+      await supabase.from("tasks").update(update).eq("id", modal.editingId);
     }
     closeModal();
     fetchTasks();
@@ -146,7 +157,12 @@ export default function App() {
     const idx = STATUSES.indexOf(task.status);
     if (idx === -1 || idx === STATUSES.length - 1) return;
     const next = STATUSES[idx + 1];
-    await supabase.from("tasks").update({ status: next, status_updated_at: new Date().toISOString() }).eq("id", task.id);
+    const update = { status: next, status_updated_at: new Date().toISOString() };
+    if (task.status === "Ожидание" && role === "designer" && !task.assigned_designer_id) {
+      update.assigned_designer = session.user.email;
+      update.assigned_designer_id = session.user.id;
+    }
+    await supabase.from("tasks").update(update).eq("id", task.id);
     fetchTasks();
   }
 
@@ -234,6 +250,13 @@ export default function App() {
                 <div style={{ fontSize: "11px", color: TEXT_MUTED, marginBottom: "2px" }}>Постановщик</div>
                 <div style={{ fontSize: "13px", fontWeight: 500, color: TEXT, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                   {task.posted_by}
+                </div>
+              </div>
+
+              <div style={{ minWidth: "160px" }}>
+                <div style={{ fontSize: "11px", color: TEXT_MUTED, marginBottom: "2px" }}>Исполнитель</div>
+                <div style={{ fontSize: "13px", fontWeight: 500, color: task.assigned_designer ? TEXT : TEXT_MUTED, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                  {task.assigned_designer || "не назначен"}
                 </div>
               </div>
 
