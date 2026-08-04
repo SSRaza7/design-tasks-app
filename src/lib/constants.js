@@ -103,7 +103,10 @@ export const mediaType = (url) => {
   if (/\.(jpg|jpeg|png|gif|webp)$/.test(clean)) return "image";
   return null;
 };
-
+export const CHART_COLORS = [
+  "#C6FF3D", "#4FA391", "#E8C93D", "#E85D3D", "#7C9EFF",
+  "#C77DFF", "#FF8FA3", "#8FBF2B", "#5DD9C1", "#F2A65A",
+];
 export const inputStyle = {
   width: "100%", boxSizing: "border-box", padding: "8px 10px", borderRadius: "7px",
   border: `1px solid ${BORDER}`, background: SURFACE_2, fontSize: "13px", color: TEXT, outline: "none",
