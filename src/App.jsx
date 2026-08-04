@@ -36,6 +36,7 @@ export default function App() {
   const [tasks, setTasks] = useState([]);
   const [celebsByGeo, setCelebsByGeo] = useState({});
   const [modal, setModal] = useState(null);
+  const [buyerFilter, setBuyerFilter] = useState("all");
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
@@ -180,18 +181,34 @@ export default function App() {
     );
   }
 
+  const isTeamLead = role === "buyer" && profile?.is_team_lead;
+  const showBuyerFilter = role === "designer" || isTeamLead;
+  const buyerOptions = Array.from(new Set(tasks.map((t) => t.posted_by).filter(Boolean)));
+  const visibleTasks = buyerFilter === "all" ? tasks : tasks.filter((t) => t.posted_by === buyerFilter);
+
+  const filterSelectStyle = {
+    padding: "8px 12px", borderRadius: "8px", border: `1px solid ${BORDER}`,
+    background: SURFACE, color: TEXT, fontSize: "13px",
+  };
+
   return (
     <div style={{ fontFamily: "'Inter', sans-serif", background: BG, minHeight: "100vh", padding: "28px", color: TEXT }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", marginBottom: "22px", flexWrap: "wrap", gap: "12px" }}>
         <div>
           <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: "12px", letterSpacing: "0.06em", color: LIME_DIM, marginBottom: "4px" }}>
-            ДИЗАЙН-СТУДИЯ / {role === "designer" ? "ПОРТАЛ ДИЗАЙНЕРА" : "ПОСТАНОВКА ЗАДАЧ"}
+            ДИЗАЙН-СТУДИЯ / {role === "designer" ? "ПОРТАЛ ДИЗАЙНЕРА" : isTeamLead ? "ПОСТАНОВКА ЗАДАЧ / ТИМЛИД" : "ПОСТАНОВКА ЗАДАЧ"}
           </div>
           <h1 style={{ fontFamily: fontStack, fontWeight: 600, fontSize: "26px", margin: 0, color: TEXT }}>
             {role === "designer" ? "Задачи в работе" : "Задачи"}
           </h1>
         </div>
         <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
+          {showBuyerFilter && (
+            <select value={buyerFilter} onChange={(e) => setBuyerFilter(e.target.value)} style={filterSelectStyle}>
+              <option value="all">Все баеры</option>
+              {buyerOptions.map((b) => <option key={b} value={b}>{b}</option>)}
+            </select>
+          )}
           {role === "buyer" && (
             <button onClick={openNew} style={primaryBtnStyle}>
               <Plus size={15} /> Новая задача
@@ -207,12 +224,12 @@ export default function App() {
       </div>
 
       <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
-        {tasks.length === 0 && (
+        {visibleTasks.length === 0 && (
           <div style={{ color: TEXT_MUTED, fontSize: "13px", padding: "24px 0", textAlign: "center", border: `1px dashed ${BORDER}`, borderRadius: "10px" }}>
             Пока нет задач
           </div>
         )}
-        {tasks.map((task) => {
+        {visibleTasks.map((task) => {
           const pm = priorityMeta(task.priority);
           const sm = STATUS_META[task.status] || STATUS_META["Ожидание"];
           return (
