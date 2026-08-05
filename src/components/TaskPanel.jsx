@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { X, Link2, Paperclip, Eye, Download, UploadCloud, Trash2 } from "lucide-react";
 import { supabase } from "../lib/supabaseClient";
 import {
@@ -30,6 +30,10 @@ export default function TaskPanel({ task, role, onClose, onTakeIntoWork, onAdvan
   const [creativeInput, setCreativeInput] = useState(task.creative_link || "");
   const [uploading, setUploading] = useState(false);
   const [uploadError, setUploadError] = useState("");
+  const [uploadSeconds, setUploadSeconds] = useState(0);
+  const timerRef = useRef(null);
+
+  useEffect(() => () => clearInterval(timerRef.current), []);
 
   if (!task) return null;
   const sm = STATUS_META[task.status];
@@ -49,9 +53,12 @@ export default function TaskPanel({ task, role, onClose, onTakeIntoWork, onAdvan
     if (!file) return;
     setUploading(true);
     setUploadError("");
+    setUploadSeconds(0);
+    timerRef.current = setInterval(() => setUploadSeconds((s) => s + 1), 1000);
     const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, "_");
     const path = `${task.id}/${Date.now()}-${safeName}`;
     const { error } = await supabase.storage.from("creatives").upload(path, file, { upsert: true });
+    clearInterval(timerRef.current);
     if (error) {
       setUploadError(error.message);
       setUploading(false);
@@ -145,7 +152,7 @@ export default function TaskPanel({ task, role, onClose, onTakeIntoWork, onAdvan
               <>
                 <label style={{ display: "flex", alignItems: "center", gap: "8px", padding: "9px 12px", borderRadius: "9px", border: `1px dashed ${BORDER_INPUT}`, cursor: "pointer", fontSize: "13px", color: TEXT_QUIET, marginBottom: "8px" }}>
                   <UploadCloud size={15} />
-                  {uploading ? "Загрузка..." : "Загрузить файл"}
+                  {uploading ? `Загрузка... ${uploadSeconds} сек` : "Загрузить файл"}
                   <input type="file" accept="video/*,image/*" onChange={handleFileUpload} disabled={uploading} style={{ display: "none" }} />
                 </label>
                 {uploadError && <div style={{ color: "#f06f6f", fontSize: "12px", marginBottom: "8px" }}>{uploadError}</div>}
