@@ -1,6 +1,6 @@
 import { useState, useMemo } from "react";
 import { DonutChart, ChartLegend } from "./DonutChart";
-import { SURFACE, SURFACE_2, BORDER, TEXT, TEXT_MUTED, inputStyle } from "../lib/constants";
+import { SURFACE, SURFACE_2, BORDER, TEXT, TEXT_MUTED, TYPES, inputStyle } from "../lib/constants";
 
 const fontStack = "'Manrope', Helvetica, Arial, sans-serif";
 
@@ -26,6 +26,7 @@ export default function Dashboard({ tasks, role, isTeamLead }) {
   const [dateFrom, setDateFrom] = useState(daysAgo(30));
   const [dateTo, setDateTo] = useState(daysAgo(0));
   const [geoFilter, setGeoFilter] = useState("all");
+  const [typeFilter, setTypeFilter] = useState("all");
 
   const geoOptions = useMemo(
     () => Array.from(new Set(tasks.map((t) => t.geo).filter(Boolean))).sort(),
@@ -46,11 +47,17 @@ export default function Dashboard({ tasks, role, isTeamLead }) {
     [inRange, geoFilter]
   );
 
-  const byBuyer = useMemo(() => groupCount(geoFiltered, (t) => t.posted_by), [geoFiltered]);
+  const filtered = useMemo(
+    () => (typeFilter === "all" ? geoFiltered : geoFiltered.filter((t) => t.type === typeFilter)),
+    [geoFiltered, typeFilter]
+  );
+
+  const byBuyer = useMemo(() => groupCount(filtered, (t) => t.posted_by), [filtered]);
   const byGeo = useMemo(() => groupCount(inRange, (t) => t.geo), [inRange]);
+  const byType = useMemo(() => groupCount(inRange, (t) => t.type), [inRange]);
   const byDesigner = useMemo(
-    () => groupCount(geoFiltered.filter((t) => t.status === "Готово"), (t) => t.assigned_designer),
-    [geoFiltered]
+    () => groupCount(filtered.filter((t) => t.status === "Готово"), (t) => t.assigned_designer),
+    [filtered]
   );
 
   const showBuyerChart = role === "designer" || isTeamLead;
@@ -78,6 +85,13 @@ export default function Dashboard({ tasks, role, isTeamLead }) {
             {geoOptions.map((g) => <option key={g} value={g}>{g}</option>)}
           </select>
         </div>
+        <div>
+          <div style={{ fontSize: "11px", color: TEXT_MUTED, marginBottom: "4px" }}>Тип задачи</div>
+          <select value={typeFilter} onChange={(e) => setTypeFilter(e.target.value)} style={inputStyle}>
+            <option value="all">Все типы</option>
+            {TYPES.map((t) => <option key={t} value={t}>{t}</option>)}
+          </select>
+        </div>
       </div>
 
       <div style={{ display: "flex", gap: "16px", flexWrap: "wrap" }}>
@@ -100,6 +114,16 @@ export default function Dashboard({ tasks, role, isTeamLead }) {
           <div style={{ display: "flex", gap: "20px", alignItems: "center" }}>
             <DonutChart data={byGeo} />
             <ChartLegend data={byGeo} />
+          </div>
+        </div>
+
+        <div style={cardStyle}>
+          <div style={{ fontFamily: fontStack, fontWeight: 600, fontSize: "14px", color: TEXT, marginBottom: "16px" }}>
+            Задачи по типу
+          </div>
+          <div style={{ display: "flex", gap: "20px", alignItems: "center" }}>
+            <DonutChart data={byType} />
+            <ChartLegend data={byType} />
           </div>
         </div>
 
