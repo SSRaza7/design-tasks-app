@@ -49,7 +49,8 @@ export default function TaskPanel({ task, role, onClose, onTakeIntoWork, onAdvan
     if (!file) return;
     setUploading(true);
     setUploadError("");
-    const path = `${task.id}/${Date.now()}-${file.name}`;
+    const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, "_");
+    const path = `${task.id}/${Date.now()}-${safeName}`;
     const { error } = await supabase.storage.from("creatives").upload(path, file, { upsert: true });
     if (error) {
       setUploadError(error.message);
