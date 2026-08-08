@@ -111,6 +111,7 @@ export default function TaskPanel({ task, role, onClose, onTakeIntoWork, onAdvan
           )}
 
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1px", background: BORDER, borderRadius: "10px", overflow: "hidden" }}>
+            <MetaCell label="ТИП ЗАДАЧИ" value={task.type} />
             <MetaCell label="ГЕО" value={task.geo ? `${countryFlag(task.geo)} ${task.geo}` : "—"} />
             <MetaCell label="ЯЗЫК" value={task.language} />
             <MetaCell label="ФОРМАТ" value={(task.format || []).join(", ")} />
