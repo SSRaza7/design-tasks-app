@@ -180,7 +180,7 @@ export default function TaskPanel({ task, role, onClose, onTakeIntoWork, onAdvan
                     <Eye size={13} /> Просмотреть
                   </a>
                   {task.status === "Готово" ? (
-                    <a href={task.creative_link} target="_blank" rel="noreferrer" download style={{ display: "flex", alignItems: "center", gap: "5px", fontSize: "12.5px", fontWeight: 700, color: BG, background: LIME, borderRadius: "8px", padding: "7px 12px" }}>
+                    <a href={`${task.creative_link}${task.creative_link.includes("?") ? "&" : "?"}download`} target="_blank" rel="noreferrer" style={{ display: "flex", alignItems: "center", gap: "5px", fontSize: "12.5px", fontWeight: 700, color: BG, background: LIME, borderRadius: "8px", padding: "7px 12px" }}>
                       <Download size={13} /> Скачать
                     </a>
                   ) : (
