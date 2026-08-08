@@ -1,9 +1,12 @@
+import { useState, useEffect } from "react";
 import { Paperclip } from "lucide-react";
 import {
   STATUSES, STATUS_META, TYPE_TAGS, priorityMeta, countryFlag, formatDateTime,
-  SURFACE_ROW, SURFACE_RAISED, SURFACE_CHIP, BORDER_ROW, BORDER_CHIP, BORDER_INPUT,
-  TEXT, TEXT_MUTED, TEXT_QUIET, TEXT_QUIETEST, LIME, LINE_FILLER, FONT_MONO, FONT_UI,
+  SURFACE_ROW, SURFACE_RAISED, SURFACE_CHIP, SURFACE_2, BORDER_ROW, BORDER_CHIP, BORDER_INPUT,
+  TEXT, TEXT_MUTED, TEXT_QUIET, TEXT_QUIETEST, LIME, BG, LINE_FILLER, FONT_MONO, FONT_UI,
 } from "../lib/constants";
+
+const PAGE_SIZE = 10;
 
 function initials(name) {
   if (!name) return "?";
@@ -12,13 +15,64 @@ function initials(name) {
   return (parts[0][0] + parts[1][0]).toUpperCase();
 }
 
+function GroupPagination({ page, totalPages, onChange }) {
+  if (totalPages <= 1) return null;
+  return (
+    <div style={{ display: "flex", justifyContent: "center", gap: "6px", padding: "10px 0 2px" }}>
+      <button
+        onClick={() => onChange(Math.max(1, page - 1))}
+        disabled={page === 1}
+        style={{
+          padding: "5px 10px", borderRadius: "6px", border: `1px solid ${BORDER_CHIP}`,
+          background: SURFACE_2, color: page === 1 ? TEXT_QUIETEST : TEXT_MUTED,
+          cursor: page === 1 ? "default" : "pointer", fontFamily: FONT_MONO, fontSize: "11px",
+        }}
+      >
+        ←
+      </button>
+      {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => (
+        <button
+          key={p}
+          onClick={() => onChange(p)}
+          style={{
+            padding: "5px 10px", borderRadius: "6px", border: `1px solid ${p === page ? LIME : BORDER_CHIP}`,
+            background: p === page ? LIME : SURFACE_2, color: p === page ? BG : TEXT_MUTED,
+            cursor: "pointer", fontFamily: FONT_MONO, fontSize: "11px", fontWeight: p === page ? 700 : 400,
+          }}
+        >
+          {p}
+        </button>
+      ))}
+      <button
+        onClick={() => onChange(Math.min(totalPages, page + 1))}
+        disabled={page === totalPages}
+        style={{
+          padding: "5px 10px", borderRadius: "6px", border: `1px solid ${BORDER_CHIP}`,
+          background: SURFACE_2, color: page === totalPages ? TEXT_QUIETEST : TEXT_MUTED,
+          cursor: page === totalPages ? "default" : "pointer", fontFamily: FONT_MONO, fontSize: "11px",
+        }}
+      >
+        →
+      </button>
+    </div>
+  );
+}
+
 const gridCols = "104px minmax(220px,1fr) 120px 130px 112px";
 
 export default function TaskListView({ tasks, onOpen }) {
+  const [pages, setPages] = useState({});
+
   const groups = STATUSES.map((status) => ({
     status,
     items: tasks.filter((t) => t.status === status),
   })).filter((g) => g.items.length > 0);
+
+  // reset pages when the underlying task set changes shape (filters/search) to avoid landing on an empty page
+  const groupKey = groups.map((g) => `${g.status}:${g.items.length}`).join("|");
+  useEffect(() => {
+    setPages({});
+  }, [groupKey]);
 
   if (tasks.length === 0) {
     return (
@@ -40,6 +94,9 @@ export default function TaskListView({ tasks, onOpen }) {
       <div style={{ minWidth: "1000px", display: "flex", flexDirection: "column", gap: "14px" }}>
         {groups.map((g) => {
           const meta = STATUS_META[g.status];
+          const totalPages = Math.max(1, Math.ceil(g.items.length / PAGE_SIZE));
+          const page = Math.min(pages[g.status] || 1, totalPages);
+          const pagedItems = g.items.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
           return (
             <div key={g.status}>
               <div style={{ display: "flex", alignItems: "center", gap: "9px", padding: "0 14px 7px" }}>
@@ -50,7 +107,7 @@ export default function TaskListView({ tasks, onOpen }) {
               </div>
 
               <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
-                {g.items.map((task) => {
+                {pagedItems.map((task) => {
                   const pm = priorityMeta(task.priority);
                   const sm = STATUS_META[task.status];
                   const assigned = !!task.assigned_designer;
@@ -125,6 +182,12 @@ export default function TaskListView({ tasks, onOpen }) {
                   );
                 })}
               </div>
+
+              <GroupPagination
+                page={page}
+                totalPages={totalPages}
+                onChange={(p) => setPages((prev) => ({ ...prev, [g.status]: p }))}
+              />
             </div>
           );
         })}
