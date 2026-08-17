@@ -137,6 +137,15 @@ async function handleRequestChanges(task, note) {
   }).eq("id", task.id);
   fetchTasks();
 }
+  async function handleApprove(task, rating) {
+    await supabase.from("tasks").update({
+      status: "Готово",
+      status_updated_at: new Date().toISOString(),
+      creative_rating: rating,
+    }).eq("id", task.id);
+    setPanelTaskId(null);
+    fetchTasks();
+  }
 
   async function handleDelete(id) {
     await supabase.from("tasks").delete().eq("id", id);
