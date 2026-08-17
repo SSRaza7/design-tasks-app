@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { X, Link2, Paperclip, Eye, Download, UploadCloud, Trash2 } from "lucide-react";
+import { X, Link2, Paperclip, Eye, Download, UploadCloud, Trash2, Star } from "lucide-react";
 import { supabase } from "../lib/supabaseClient";
 import {
   STATUSES, STATUS_META, priorityMeta, countryFlag, formatDateTime, mediaType,
@@ -15,16 +15,49 @@ function nextActionLabel(status) {
   return null;
 }
 
-function MetaCell({ label, value }) {
+function MetaCell({ label, value, full }) {
   return (
-    <div style={{ background: SURFACE_2, padding: "11px 13px" }}>
+    <div style={{ background: SURFACE_2, padding: "11px 13px", gridColumn: full ? "1 / -1" : undefined }}>
       <div style={{ fontFamily: FONT_MONO, fontSize: "9px", letterSpacing: ".14em", color: TEXT_QUIETEST }}>{label}</div>
       <div style={{ fontFamily: FONT_UI, fontWeight: 600, fontSize: "13px", color: TEXT, marginTop: "5px" }}>{value || "—"}</div>
     </div>
   );
 }
 
-export default function TaskPanel({ task, role, onClose, onTakeIntoWork, onAdvance, onDelete, onSaveCreative, onRequestChanges }) {
+function StarPicker({ value, onChange }) {
+  const [hover, setHover] = useState(0);
+  return (
+    <div style={{ display: "flex", gap: "6px" }}>
+      {[1, 2, 3, 4, 5].map((n) => {
+        const filled = n <= (hover || value);
+        return (
+          <Star
+            key={n}
+            size={28}
+            onMouseEnter={() => setHover(n)}
+            onMouseLeave={() => setHover(0)}
+            onClick={() => onChange(n)}
+            fill={filled ? "#c8f751" : "none"}
+            color={filled ? "#c8f751" : "#5d6455"}
+            style={{ cursor: "pointer" }}
+          />
+        );
+      })}
+    </div>
+  );
+}
+
+function StarsDisplay({ value }) {
+  return (
+    <div style={{ display: "flex", gap: "2px" }}>
+      {[1, 2, 3, 4, 5].map((n) => (
+        <Star key={n} size={13} fill={n <= value ? "#c8f751" : "none"} color={n <= value ? "#c8f751" : "#3a3f30"} />
+      ))}
+    </div>
+  );
+}
+
+export default function TaskPanel({ task, role, onClose, onTakeIntoWork, onAdvance, onDelete, onSaveCreative, onRequestChanges, onApprove }) {
   const [showRevision, setShowRevision] = useState(false);
   const [revisionText, setRevisionText] = useState("");
   const [creativeInput, setCreativeInput] = useState(task.creative_link || "");
@@ -32,6 +65,9 @@ export default function TaskPanel({ task, role, onClose, onTakeIntoWork, onAdvan
   const [uploadError, setUploadError] = useState("");
   const [uploadSeconds, setUploadSeconds] = useState(0);
   const timerRef = useRef(null);
+
+  const [showRatingModal, setShowRatingModal] = useState(false);
+  const [ratingValue, setRatingValue] = useState(0);
 
   useEffect(() => () => clearInterval(timerRef.current), []);
 
@@ -70,6 +106,13 @@ export default function TaskPanel({ task, role, onClose, onTakeIntoWork, onAdvan
     setUploading(false);
   }
 
+  function confirmRating() {
+    if (!ratingValue) return;
+    onApprove(task, ratingValue);
+    setShowRatingModal(false);
+    setRatingValue(0);
+  }
+
   return (
     <>
       <div onClick={onClose} style={{ position: "fixed", inset: 0, background: "rgba(5,6,5,.6)", zIndex: 20 }} />
@@ -103,6 +146,13 @@ export default function TaskPanel({ task, role, onClose, onTakeIntoWork, onAdvan
             )}
           </div>
 
+          {task.creative_rating && (
+            <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+              <span style={{ fontFamily: FONT_MONO, fontSize: "9px", letterSpacing: ".14em", color: TEXT_QUIETEST }}>ОЦЕНКА КРЕАТИВА</span>
+              <StarsDisplay value={task.creative_rating} />
+            </div>
+          )}
+
           {task.revision_note && (
             <div style={{ background: "rgba(240,111,111,.08)", border: "1px solid rgba(240,111,111,.28)", borderRadius: "10px", padding: "11px 13px" }}>
               <div style={{ fontFamily: FONT_MONO, fontSize: "9px", letterSpacing: ".14em", color: "#f06f6f", marginBottom: "5px" }}>ПРАВКИ ОТ БАЕРА</div>
@@ -117,7 +167,7 @@ export default function TaskPanel({ task, role, onClose, onTakeIntoWork, onAdvan
             <MetaCell label="ФОРМАТ" value={(task.format || []).join(", ")} />
             <MetaCell label="ПРИОРИТЕТ" value={task.priority} />
             <MetaCell label="ПОСТАНОВЩИК" value={task.posted_by} />
-            <MetaCell label="ИСПОЛНИТЕЛЬ" value={task.assigned_designer} />
+            <MetaCell label="ИСПОЛНИТЕЛЬ" value={task.assigned_designer} full />
           </div>
 
           {(task.celebs || []).length > 0 && (
@@ -215,7 +265,7 @@ export default function TaskPanel({ task, role, onClose, onTakeIntoWork, onAdvan
               <div style={{ fontFamily: FONT_MONO, fontSize: "9.5px", letterSpacing: ".14em", color: TEXT_QUIETEST, marginBottom: "9px" }}>ПЕРЕВЕСТИ В</div>
               <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
                 <button
-                  onClick={() => onAdvance(task)}
+                  onClick={() => (canApprove ? setShowRatingModal(true) : onAdvance(task))}
                   style={{ fontFamily: FONT_UI, fontWeight: 600, fontSize: "12.5px", padding: "7px 12px", borderRadius: "8px", background: SURFACE_CHIP, border: `1px solid ${BORDER_CHIP}`, color: TEXT_SECONDARY, cursor: "pointer" }}
                 >
                   {canApprove ? "Готово (утвердить)" : next}
@@ -288,6 +338,49 @@ export default function TaskPanel({ task, role, onClose, onTakeIntoWork, onAdvan
           )}
         </div>
       </div>
+
+      {showRatingModal && (
+        <>
+          <div onClick={() => setShowRatingModal(false)} style={{ position: "fixed", inset: 0, background: "rgba(5,6,5,.7)", zIndex: 30 }} />
+          <div
+            style={{
+              position: "fixed", top: "50%", left: "50%", transform: "translate(-50%, -50%)", zIndex: 31,
+              background: SURFACE, border: `1px solid ${BORDER_INPUT}`, borderRadius: "14px",
+              padding: "26px 28px", width: "340px", maxWidth: "90vw",
+              boxShadow: "0 40px 80px -20px rgba(0,0,0,.85)", textAlign: "center",
+            }}
+          >
+            <div style={{ fontFamily: FONT_UI, fontWeight: 800, fontSize: "17px", color: TEXT, marginBottom: "6px" }}>
+              Оцените креатив
+            </div>
+            <div style={{ fontSize: "12.5px", color: TEXT_QUIET, marginBottom: "18px" }}>
+              От 1 до 5 звёзд — задача перейдёт в «Готово»
+            </div>
+            <div style={{ display: "flex", justifyContent: "center", marginBottom: "20px" }}>
+              <StarPicker value={ratingValue} onChange={setRatingValue} />
+            </div>
+            <div style={{ display: "flex", gap: "8px" }}>
+              <button
+                onClick={() => setShowRatingModal(false)}
+                style={{ flex: 1, height: "36px", borderRadius: "9px", border: `1px solid ${BORDER_INPUT}`, background: "transparent", color: TEXT_QUIET, fontFamily: FONT_UI, fontWeight: 600, fontSize: "13px", cursor: "pointer" }}
+              >
+                Отмена
+              </button>
+              <button
+                onClick={confirmRating}
+                disabled={!ratingValue}
+                style={{
+                  flex: 1, height: "36px", borderRadius: "9px", border: "none",
+                  background: ratingValue ? LIME : "#1c2016", color: ratingValue ? BG : TEXT_QUIETEST,
+                  fontFamily: FONT_UI, fontWeight: 700, fontSize: "13px", cursor: ratingValue ? "pointer" : "not-allowed",
+                }}
+              >
+                Подтвердить
+              </button>
+            </div>
+          </div>
+        </>
+      )}
     </>
   );
 }
