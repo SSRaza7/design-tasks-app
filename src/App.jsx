@@ -342,6 +342,7 @@ async function handleRequestChanges(task, note) {
   onDelete={handleDelete}
   onSaveCreative={handleSaveCreative}
   onRequestChanges={handleRequestChanges}
+  onApprove={handleApprove}
 />
       )}
 
