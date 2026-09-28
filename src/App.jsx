@@ -11,9 +11,9 @@ import NewTaskModal from "./components/NewTaskModal";
 import SettingsModal from "./components/SettingsModal";
 import Dashboard from "./components/Dashboard";
 import {
-  BG, SURFACE_2, BORDER, BORDER_INPUT, BORDER_INPUT_HOVER,
+  BG, SURFACE_2, BORDER, BORDER_INPUT,
   TEXT, TEXT_QUIET, TEXT_QUIETEST, SURFACE_TOGGLE,
-  LIME, primaryBtnStyle, ghostBtnStyle, FONT_MONO, FONT_UI,
+  primaryBtnStyle, ghostBtnStyle, FONT_MONO, FONT_UI,
 } from "./lib/constants";
 
 const NAV_LABELS = {
@@ -36,6 +36,7 @@ export default function App() {
 
   const [nav, setNav] = useState("tasks");
   const [buyerFilter, setBuyerFilter] = useState("all");
+  const [designerFilter, setDesignerFilter] = useState("all");
   const [query, setQuery] = useState("");
   const [viewMode, setViewMode] = useState("list");
   const [panelTaskId, setPanelTaskId] = useState(null);
@@ -119,24 +120,25 @@ export default function App() {
   }
 
   const STATUS_ORDER = ["Ожидание", "В работе", "На ревью", "Готово"];
-async function handleAdvance(task) {
-  const idx = STATUS_ORDER.indexOf(task.status);
-  if (idx === -1 || idx === STATUS_ORDER.length - 1) return;
-  const nextStatus = STATUS_ORDER[idx + 1];
-  const update = { status: nextStatus, status_updated_at: new Date().toISOString() };
-  if (nextStatus === "На ревью") update.revision_note = null;
-  await supabase.from("tasks").update(update).eq("id", task.id);
-  fetchTasks();
-}
+  async function handleAdvance(task) {
+    const idx = STATUS_ORDER.indexOf(task.status);
+    if (idx === -1 || idx === STATUS_ORDER.length - 1) return;
+    const nextStatus = STATUS_ORDER[idx + 1];
+    const update = { status: nextStatus, status_updated_at: new Date().toISOString() };
+    if (nextStatus === "На ревью") update.revision_note = null;
+    await supabase.from("tasks").update(update).eq("id", task.id);
+    fetchTasks();
+  }
 
-async function handleRequestChanges(task, note) {
-  await supabase.from("tasks").update({
-    status: "В работе",
-    status_updated_at: new Date().toISOString(),
-    revision_note: note,
-  }).eq("id", task.id);
-  fetchTasks();
-}
+  async function handleRequestChanges(task, note) {
+    await supabase.from("tasks").update({
+      status: "В работе",
+      status_updated_at: new Date().toISOString(),
+      revision_note: note,
+    }).eq("id", task.id);
+    fetchTasks();
+  }
+
   async function handleApprove(task, rating) {
     await supabase.from("tasks").update({
       status: "Готово",
@@ -171,6 +173,12 @@ async function handleRequestChanges(task, note) {
     return Object.entries(map).map(([name, count]) => ({ name, count })).sort((a, b) => b.count - a.count);
   }, [tasks]);
 
+  const designerOptions = useMemo(() => {
+    const map = {};
+    tasks.forEach((t) => { if (t.assigned_designer) map[t.assigned_designer] = (map[t.assigned_designer] || 0) + 1; });
+    return Object.entries(map).map(([name, count]) => ({ name, count })).sort((a, b) => b.count - a.count);
+  }, [tasks]);
+
   const navCounts = useMemo(() => {
     const mine = role === "designer"
       ? tasks.filter((t) => t.assigned_designer_id === session?.user?.id).length
@@ -199,15 +207,20 @@ async function handleRequestChanges(task, note) {
     [navFiltered, buyerFilter]
   );
 
+  const designerFilteredTasks = useMemo(
+    () => (designerFilter === "all" ? buyerFilteredTasks : buyerFilteredTasks.filter((t) => t.assigned_designer === designerFilter)),
+    [buyerFilteredTasks, designerFilter]
+  );
+
   const searched = useMemo(() => {
-    if (!query.trim()) return buyerFilteredTasks;
+    if (!query.trim()) return designerFilteredTasks;
     const q = query.trim().toLowerCase();
-    return buyerFilteredTasks.filter((t) =>
+    return designerFilteredTasks.filter((t) =>
       (t.title || "").toLowerCase().includes(q) ||
       `des-${String(t.id).padStart(3, "0")}`.includes(q) ||
       (t.geo || "").toLowerCase().includes(q)
     );
-  }, [buyerFilteredTasks, query]);
+  }, [designerFilteredTasks, query]);
 
   const navItems = [
     { id: "tasks", label: "Все задачи", count: navCounts.tasks },
@@ -242,6 +255,9 @@ async function handleRequestChanges(task, note) {
         buyerOptions={buyerOptions}
         buyerFilter={buyerFilter}
         setBuyerFilter={setBuyerFilter}
+        designerOptions={designerOptions}
+        designerFilter={designerFilter}
+        setDesignerFilter={setDesignerFilter}
         displayName={displayName}
         roleLabel={roleLabel}
         onLogout={handleLogout}
@@ -322,7 +338,7 @@ async function handleRequestChanges(task, note) {
           </div>
         ) : (
           <>
-            <StatusSummary tasks={navFiltered} onSelectStatus={() => setViewMode("board")} />
+            <StatusSummary tasks={designerFilteredTasks} onSelectStatus={() => setViewMode("board")} />
             {viewMode === "list" ? (
               <TaskListView tasks={searched} onOpen={(t) => setPanelTaskId(t.id)} />
             ) : (
@@ -334,16 +350,16 @@ async function handleRequestChanges(task, note) {
 
       {panelTask && (
         <TaskPanel
-  task={panelTask}
-  role={role}
-  onClose={() => setPanelTaskId(null)}
-  onTakeIntoWork={handleTakeIntoWork}
-  onAdvance={handleAdvance}
-  onDelete={handleDelete}
-  onSaveCreative={handleSaveCreative}
-  onRequestChanges={handleRequestChanges}
-  onApprove={handleApprove}
-/>
+          task={panelTask}
+          role={role}
+          onClose={() => setPanelTaskId(null)}
+          onTakeIntoWork={handleTakeIntoWork}
+          onAdvance={handleAdvance}
+          onDelete={handleDelete}
+          onSaveCreative={handleSaveCreative}
+          onRequestChanges={handleRequestChanges}
+          onApprove={handleApprove}
+        />
       )}
 
       {creating && (
