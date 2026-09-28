@@ -1,6 +1,6 @@
 import { LogOut } from "lucide-react";
 import {
-  BG, BG_SIDEBAR, LIME, TEXT, TEXT_MUTED, TEXT_QUIET, TEXT_QUIETEST,
+  BG, BG_SIDEBAR, LIME, TEXT, TEXT_QUIET, TEXT_QUIETEST,
   SURFACE_CHIP, SURFACE_RAISED, BORDER, BORDER_CHIP, FONT_MONO, FONT_UI,
   BUYER_DOT_COLORS,
 } from "../lib/constants";
@@ -12,13 +12,56 @@ function initials(name) {
   return (parts[0][0] + parts[1][0]).toUpperCase();
 }
 
-export default function Sidebar({ navItems, nav, setNav, showBuyerFilter, buyerOptions, buyerFilter, setBuyerFilter, displayName, roleLabel, onLogout }) {
+function FilterList({ title, allLabel, options, value, onChange, colorOffset = 0 }) {
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: "2px" }}>
+      <div style={{ fontFamily: FONT_MONO, fontSize: "9px", letterSpacing: ".18em", color: TEXT_QUIETEST, padding: "0 8px 6px" }}>{title}</div>
+      <div
+        onClick={() => onChange("all")}
+        className={value === "all" ? "" : "sb-buyer-item"}
+        style={{
+          display: "flex", alignItems: "center", gap: "9px", padding: "8px 9px", borderRadius: "8px", cursor: "pointer",
+          background: value === "all" ? SURFACE_CHIP : "transparent",
+          boxShadow: value === "all" ? `inset 0 0 0 1px ${BORDER_CHIP}` : "none",
+        }}
+      >
+        <span style={{ width: "6px", height: "6px", borderRadius: "50%", background: LIME, flexShrink: 0 }} />
+        <span style={{ fontFamily: FONT_UI, fontSize: "12.5px", fontWeight: 500, color: TEXT, flex: 1 }}>{allLabel}</span>
+      </div>
+      {options.map((o, i) => (
+        <div
+          key={o.name}
+          onClick={() => onChange(o.name)}
+          className={value === o.name ? "" : "sb-buyer-item"}
+          style={{
+            display: "flex", alignItems: "center", gap: "9px", padding: "8px 9px", borderRadius: "8px", cursor: "pointer",
+            background: value === o.name ? SURFACE_CHIP : "transparent",
+            boxShadow: value === o.name ? `inset 0 0 0 1px ${BORDER_CHIP}` : "none",
+          }}
+        >
+          <span style={{ width: "6px", height: "6px", borderRadius: "50%", background: BUYER_DOT_COLORS[(i + colorOffset) % BUYER_DOT_COLORS.length], flexShrink: 0 }} />
+          <span style={{ fontFamily: FONT_UI, fontSize: "12.5px", fontWeight: 500, color: TEXT, flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+            {o.name}
+          </span>
+          <span style={{ fontFamily: FONT_MONO, fontSize: "10.5px", color: TEXT_QUIET }}>{o.count}</span>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+export default function Sidebar({
+  navItems, nav, setNav,
+  showBuyerFilter, buyerOptions, buyerFilter, setBuyerFilter,
+  designerOptions, designerFilter, setDesignerFilter,
+  displayName, roleLabel, onLogout,
+}) {
   return (
     <aside
       style={{
         borderRight: `1px solid ${BORDER}`, background: BG_SIDEBAR, display: "flex",
         flexDirection: "column", gap: "20px", padding: "18px 14px",
-        position: "sticky", top: 0, height: "100vh",
+        position: "sticky", top: 0, height: "100vh", overflowY: "auto",
       }}
     >
       <div style={{ display: "flex", alignItems: "center", gap: "9px", padding: "0 6px" }}>
@@ -43,7 +86,7 @@ export default function Sidebar({ navItems, nav, setNav, showBuyerFilter, buyerO
               style={{
                 display: "flex", justifyContent: "space-between", alignItems: "center", gap: "8px",
                 padding: "8px 9px", borderRadius: "8px", cursor: "pointer",
-                background: active ? LIME : "transparent", color: active ? BG : TEXT_MUTED,
+                background: active ? LIME : "transparent", color: active ? BG : "#a8b09a",
               }}
             >
               <span style={{ fontFamily: FONT_UI, fontSize: "13px", fontWeight: 600 }}>{n.label}</span>
@@ -56,39 +99,24 @@ export default function Sidebar({ navItems, nav, setNav, showBuyerFilter, buyerO
       </div>
 
       {showBuyerFilter && (
-        <div style={{ display: "flex", flexDirection: "column", gap: "2px" }}>
-          <div style={{ fontFamily: FONT_MONO, fontSize: "9px", letterSpacing: ".18em", color: TEXT_QUIETEST, padding: "0 8px 6px" }}>ФИЛЬТР</div>
-          <div
-            onClick={() => setBuyerFilter("all")}
-            className={buyerFilter === "all" ? "" : "sb-buyer-item"}
-            style={{
-              display: "flex", alignItems: "center", gap: "9px", padding: "8px 9px", borderRadius: "8px", cursor: "pointer",
-              background: buyerFilter === "all" ? SURFACE_CHIP : "transparent",
-              boxShadow: buyerFilter === "all" ? `inset 0 0 0 1px ${BORDER_CHIP}` : "none",
-            }}
-          >
-            <span style={{ width: "6px", height: "6px", borderRadius: "50%", background: LIME, flexShrink: 0 }} />
-            <span style={{ fontFamily: FONT_UI, fontSize: "12.5px", fontWeight: 500, color: TEXT, flex: 1 }}>Все баеры</span>
-          </div>
-          {buyerOptions.map((b, i) => (
-            <div
-              key={b.name}
-              onClick={() => setBuyerFilter(b.name)}
-              className={buyerFilter === b.name ? "" : "sb-buyer-item"}
-              style={{
-                display: "flex", alignItems: "center", gap: "9px", padding: "8px 9px", borderRadius: "8px", cursor: "pointer",
-                background: buyerFilter === b.name ? SURFACE_CHIP : "transparent",
-                boxShadow: buyerFilter === b.name ? `inset 0 0 0 1px ${BORDER_CHIP}` : "none",
-              }}
-            >
-              <span style={{ width: "6px", height: "6px", borderRadius: "50%", background: BUYER_DOT_COLORS[i % BUYER_DOT_COLORS.length], flexShrink: 0 }} />
-              <span style={{ fontFamily: FONT_UI, fontSize: "12.5px", fontWeight: 500, color: TEXT, flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                {b.name}
-              </span>
-              <span style={{ fontFamily: FONT_MONO, fontSize: "10.5px", color: TEXT_QUIET }}>{b.count}</span>
-            </div>
-          ))}
-        </div>
+        <FilterList
+          title="БАЕРЫ"
+          allLabel="Все баеры"
+          options={buyerOptions}
+          value={buyerFilter}
+          onChange={setBuyerFilter}
+        />
+      )}
+
+      {designerOptions.length > 0 && (
+        <FilterList
+          title="ИСПОЛНИТЕЛИ"
+          allLabel="Все дизайнеры"
+          options={designerOptions}
+          value={designerFilter}
+          onChange={setDesignerFilter}
+          colorOffset={3}
+        />
       )}
 
       <div style={{ marginTop: "auto", borderTop: `1px solid ${BORDER}`, paddingTop: "12px", display: "flex", alignItems: "center", gap: "9px" }}>
